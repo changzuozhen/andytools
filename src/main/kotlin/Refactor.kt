@@ -2,27 +2,28 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 
 var DEBUG = true
-const val logPath = "build/a.txt"
+const val logPath = "out/a.txt"
 const val FILENAME = logPath
-const val handlePath = "build/"
+const val handlePath = "out/"
 val testfile = ""
 
-val searchFileEnds = arrayOf(
-    ".mp3",
-    ".m4a",
-    ".pdf",
-    ".png",
-    ".jpg",
-    ".txt",
-    ".doc",
-    ".docx"
+val fileTypes = arrayOf(
+    "mp3",
+    "m4a",
+    "pdf",
+    "png",
+    "jpg",
+    "txt",
+    "doc",
+    "docx"
 )
 
-val searchFiletype = arrayOf(
+val fileTypeSummerys = arrayOf(
     "mp3",
     "mp3",
     "doc",
@@ -44,17 +45,7 @@ fun main(args: Array<String>) {
 //    }
 
     handlePath(handlePath)
-//    handlePathTempFix(handlePath)
 //    test1()
-}
-
-private fun test1() {
-    val file = File(testfile)
-    var lines = file.readLines()
-    lines.map { s: String -> File(s) }
-        .forEach { file: File ->
-            refactorFileTempFix(file)
-        }
 }
 
 fun init() {
@@ -63,6 +54,7 @@ fun init() {
         logFile.writeText("")
     }
 }
+
 fun handlePath(path: String) {
     val dir = File(path)
     if (!dir.exists()) {
@@ -78,6 +70,15 @@ fun handlePath(path: String) {
     delNullDir(dir)
 }
 
+private fun test1() {
+    val file = File(testfile)
+    var lines = file.readLines()
+    lines.map { s: String -> File(s) }
+        .forEach { file: File ->
+            refactorFile(file)
+        }
+}
+
 private fun refactorFile(file: File) {
     val line = file.absolutePath
     if (file.name.startsWith("._") || ".DS_Store".equals(file.name)) {
@@ -89,131 +90,40 @@ private fun refactorFile(file: File) {
         }
         return
     }
-    searchFileEnds.forEachIndexed { index: Int, ending: String ->
-        val type1 = ending.trimStart('.')
-        val summeryType = searchFiletype[index]
-        if (line.endsWith(ending, true)) {
-            if (line.contains("年/")) {
-                val dest = line.substringBefore("年/", "")
-                val dest2 = line.substringAfter("年/", "").replace("/", "_")
-                val destFile = File("${dest}年${summeryType}/$dest2")
-                if (!file.equals(destFile)) {
-                    if (DEBUG) {
-                        log("$file -> $destFile")
-                    } else {
-                        renameFile(destFile, file)
-                    }
-                }
-            }
-            val pattern: Pattern = Pattern.compile("(\\d{4})年(\\d{2}|\\d{1})月/")
-            val matcher = pattern.matcher(line)
-            if (matcher.find()) {
-                val matchResult = matcher.toMatchResult()
-                val dest1 =
-                    line.subSequence(0, matchResult.start()).toString() + matchResult.group(1) + "年${summeryType}/"
-                var dest2 = line.subSequence(matchResult.end(), line.length).toString().replace("/", "_")
-                val destFile = File("$dest1/$dest2")
-                if (!file.equals(destFile)) {
-                    if (DEBUG) {
-                        log("$file -> $destFile")
-                    } else {
-                        renameFile(destFile, file)
-                    }
-                }
-            }
+    if (DEBUG || file.isFile) {
+        val summeryType = fileTypeSummerys[fileTypes.indexOf(file.extension.toLowerCase())]
+        val matcher1 = Pattern.compile("/(\\d{4})年/").matcher(line)
+        if (handle(matcher1, line, summeryType, file)) {
+            return
+        }
+
+        val matcher2 = Pattern.compile("/(\\d{4})年(\\d{2}|\\d{1})月/").matcher(line)
+        if (handle(matcher2, line, summeryType, file)) {
+            return
         }
     }
 }
 
-fun handlePathTempFix(path: String) {
-    val dir = File(path)
-    if (!dir.exists()) {
-        print("路径不存在：$path")
-        return
-    }
-    val dirs = ArrayList<File>()
-    triversePath(dir, dirs)
-    dirs.forEach {
-        refactorFileTempFix(it)
-    }
-
-    delNullDir(dir)
-}
-
-
-private fun refactorFileTempFix(file: File) {
-    val line = file.absolutePath
-    searchFileEnds.forEachIndexed { index: Int, ending: String ->
-
-        val type1 = ending.trimStart('.')
-        val summeryType = searchFiletype[index]
-        if (line.endsWith(ending, true)) {
-            if (line.contains("年.$summeryType/")) {
-                val dest = line.substringBefore("年.$summeryType/", "")
-                val dest2 = line.substringAfter("年.$summeryType/", "").replace("/", "_")
-                val destFile = File("${dest}年${summeryType}/$dest2")
-                if (!file.equals(destFile)) {
-                    if (DEBUG) {
-                        log("$file -> $destFile")
-                    } else {
-                        renameFile(destFile, file)
-                    }
-                }
-            } else if (line.contains("年$type1/")) {
-                val dest = line.substringBefore("年$type1/", "")
-                val dest2 = line.substringAfter("年$type1/", "").replace("/", "_")
-                val destFile = File("${dest}年${summeryType}/$dest2")
-                if (!file.equals(destFile)) {
-                    if (DEBUG) {
-                        log("$file -> $destFile")
-                    } else {
-                        renameFile(destFile, file)
-                    }
-                }
+private fun handle(matcher: Matcher, line: String, summeryType: String, file: File): Boolean {
+    if (matcher.find()) {
+        val matchResult = matcher.toMatchResult()
+        val dest1 = line.subSequence(
+            0,
+            matchResult.start()
+        ).toString() + "/" + matchResult.group(1) + "年${summeryType}/"
+        var dest2 = line.subSequence(matchResult.end(), line.length).toString()
+            .replace("/", "_")
+        val destFile = File("$dest1/$dest2")
+        if (!file.equals(destFile)) {
+            if (DEBUG) {
+                log("$file -> $destFile")
             } else {
-                val pattern: Pattern = Pattern.compile("(\\d{4})$type1/")
-                val matcher = pattern.matcher(line)
-
-                val pattern2: Pattern = Pattern.compile("/(\\d{4})/")
-                val matcher2 = pattern2.matcher(line)
-
-                if (matcher.find()) {
-                    val matchResult = matcher.toMatchResult()
-                    val dest1 =
-                        line.subSequence(0, matchResult.start()).toString() + matchResult.group(1) + "年${summeryType}/"
-                    var dest2 = line.subSequence(matchResult.end(), line.length).toString().replace("/", "_")
-                    val destFile = File("$dest1/$dest2")
-                    if (!file.equals(destFile)) {
-                        if (DEBUG) {
-                            log("$file -> $destFile")
-                        } else {
-                            renameFile(destFile, file)
-                        }
-                    }
-                } else if (matcher2.find()) {
-                    val matchResult = matcher2.toMatchResult()
-                    val dest1 =
-                        line.subSequence(
-                            0,
-                            matchResult.start()
-                        ).toString() + "/" + matchResult.group(1) + "年${summeryType}/"
-                    var dest2 = line.subSequence(matchResult.end(), line.length).toString().replace("/", "_")
-                    val destFile = File("$dest1/$dest2")
-
-                    if (file.parentFile.name == matchResult.group(1)) {
-                        if (!file.equals(destFile)) {
-                            if (DEBUG) {
-                                log("$file -> $destFile")
-                            } else {
-                                renameFile(destFile, file)
-                            }
-                        }
-                    }
-                }
+                renameFile(destFile, file)
             }
-
         }
+        return true
     }
+    return false
 }
 
 private fun renameFile(destFile: File, fromFile: File) {
