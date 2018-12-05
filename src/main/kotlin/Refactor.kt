@@ -91,7 +91,12 @@ private fun refactorFile(file: File) {
         return
     }
     if (DEBUG || file.isFile) {
-        val summeryType = fileTypeSummerys[fileTypes.indexOf(file.extension.toLowerCase())]
+        val indexOf = fileTypes.indexOf(file.extension.toLowerCase())
+        if (indexOf == -1) {
+            log("error:$file")
+            return
+        }
+        val summeryType = fileTypeSummerys[indexOf]
         val matcher1 = Pattern.compile("/(\\d{4})年/").matcher(line)
         if (handle(matcher1, line, summeryType, file)) {
             return
