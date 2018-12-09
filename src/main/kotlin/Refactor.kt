@@ -15,6 +15,7 @@ val testfile = ""
 val fileTypes = arrayOf(
     "mp3",
     "m4a",
+    "mp4",
     "pdf",
     "png",
     "jpg",
@@ -24,6 +25,7 @@ val fileTypes = arrayOf(
 )
 
 val fileTypeSummerys = arrayOf(
+    "mp3",
     "mp3",
     "mp3",
     "doc",
