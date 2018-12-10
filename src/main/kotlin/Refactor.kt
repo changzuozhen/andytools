@@ -1,17 +1,10 @@
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileWriter
-import java.io.IOException
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 
-var DEBUG = true
-const val logPath = "out/a.txt"
-const val FILENAME = logPath
-const val handlePath = "out/"
 val testfile = ""
-
+const val handlePath = "out/"
 val fileTypes = arrayOf(
     "mp3",
     "m4a",
@@ -46,7 +39,9 @@ fun main(args: Array<String>) {
 //        handlePath(args[0])
 //    }
 
-    handlePath(handlePath)
+    handlePathWithHandler(handlePath) { path, file ->
+        refactorFile(path, file)
+    }
 //    test1()
 }
 
@@ -57,31 +52,16 @@ fun init() {
     }
 }
 
-fun handlePath(path: String) {
-    val dir = File(path)
-    if (!dir.exists()) {
-        print("路径不存在：$path")
-        return
-    }
-    val dirs = ArrayList<File>()
-    triversePath(dir, dirs)
-    dirs.forEach {
-        refactorFile(it)
-    }
-
-    delNullDir(dir)
-}
-
 private fun test1() {
-    val file = File(testfile)
-    var lines = file.readLines()
+    val testf = File(testfile)
+    var lines = testf.readLines()
     lines.map { s: String -> File(s) }
         .forEach { file: File ->
-            refactorFile(file)
+            refactorFile(testfile, file)
         }
 }
 
-private fun refactorFile(file: File) {
+private fun refactorFile(path: String, file: File) {
     val line = file.absolutePath
     if (file.name.startsWith("._") || ".DS_Store".equals(file.name)) {
         if (DEBUG) {
@@ -131,72 +111,4 @@ private fun handle(matcher: Matcher, line: String, summeryType: String, file: Fi
         return true
     }
     return false
-}
-
-private fun renameFile(destFile: File, fromFile: File) {
-    if (!destFile.parentFile.exists()) {
-        destFile.parentFile.mkdirs()
-    }
-    if (fromFile.exists()) {
-        log("$fromFile -> $destFile")
-        fromFile.renameTo(destFile)
-        return
-    }
-//    writeLog("ignore $fromFile")
-}
-
-fun triversePath(dir: File, files: ArrayList<File>) {
-    if (dir.exists()) {
-        if (dir.isDirectory) {
-            dir.listFiles().forEach { dir2 ->
-                triversePath(dir2, files)
-            }
-        } else {
-            files.add(dir)
-        }
-    }
-}
-
-fun delNullDir(f: File) {
-    for (f1 in f.listFiles()) {
-        if (f1.isDirectory) {
-            delNullDir(f1)
-            //一直递归到最后的目录
-            if (f1.listFiles().isEmpty()) {
-                //如果是文件夹里面没有文件证明是空文件，进行删除
-                if (DEBUG) {
-                    log("delete:$f1")
-                } else {
-                    log("delete:$f1")
-                    f1.delete()
-                }
-            }
-        }
-    }
-}
-
-
-fun log(info: String) {
-//    if (DEBUG) {
-//        println(info)
-//    } else {
-    var bw: BufferedWriter? = null
-    var fw: FileWriter? = null
-    try {
-        fw = FileWriter(FILENAME, true)
-        bw = BufferedWriter(fw)
-        bw.write(info)
-        bw.write("\n")
-    } catch (e: IOException) {
-        e.printStackTrace()
-    } finally {
-        try {
-            bw?.close()
-            fw?.close()
-        } catch (ex: IOException) {
-            ex.printStackTrace()
-        }
-    }
-    println(info)
-//    }
 }
