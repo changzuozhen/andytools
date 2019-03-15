@@ -37,7 +37,7 @@ fun main(args: Array<String>) {
     if (args.isNotEmpty()) {
         if (args.contains("confirmed")) {
             println("将造成实际改动")
-//            DEBUG = false
+            DEBUG = false
         }
     }
     var file = File("")
