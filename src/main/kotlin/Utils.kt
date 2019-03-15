@@ -3,8 +3,8 @@ import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 
-var DEBUG = false
-const val logPath = "out/a.txt"
+var DEBUG = true
+const val logPath = "changelog.txt"
 const val FILENAME = logPath
 
 fun handlePathWithHandler(path: String, handler: (String, File) -> Unit) {

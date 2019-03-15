@@ -3,8 +3,8 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 
-val testfile = ""
-const val handlePath = "out/"
+val testfile = "out/test.txt"
+var handlePath = ""
 val fileTypes = arrayOf(
     "mp3",
     "m4a",
@@ -30,6 +30,20 @@ val fileTypeSummerys = arrayOf(
 )
 
 fun main(args: Array<String>) {
+
+    if (args == null || args.isEmpty()) {
+        println("使用测试模式，只扫描，并输出结果，并不造成实际改动")
+    }
+    if (args.isNotEmpty()) {
+        if (args.contains("confirmed")) {
+            println("将造成实际改动")
+//            DEBUG = false
+        }
+    }
+    var file = File("")
+    println("将使用当前目录扫描")
+    println(file.absoluteFile)
+    handlePath = file.absolutePath
     init()
 //    if (args == null || args.size == 0) {
 //        writeLog("请在命令后面带上需要处理的完整路径")
@@ -52,7 +66,19 @@ fun init() {
     }
 }
 
-private fun test1() {
+fun testMake() {
+    val testf = File(testfile)
+    var lines = testf.readLines()
+    lines.map { s: String -> File(s) }
+        .forEach { file: File ->
+            if (fileTypes.contains(file.extension)) {
+                file.parentFile.mkdirs()
+                file.createNewFile()
+            }
+        }
+}
+
+fun test1() {
     val testf = File(testfile)
     var lines = testf.readLines()
     lines.map { s: String -> File(s) }
